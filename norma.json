@@ -1,0 +1,44 @@
+{
+  "rendelet": "60/1992. (IV. 1.) Korm. rendelet",
+  "forras": "https://net.jogtar.hu/jogszabaly?docid=99200060.kor",
+  "nav_uzemanyagar": "https://nav.gov.hu/ugyfeliranytu/uzemanyag/",
+  "szemelygepkocsi": {
+    "benzin": [
+      { "label": "1000 cm³-ig",      "max": 1000, "norma": 7.6 },
+      { "label": "1001–1500 cm³",     "min": 1001, "max": 1500, "norma": 8.6 },
+      { "label": "1501–2000 cm³",     "min": 1501, "max": 2000, "norma": 9.5 },
+      { "label": "2001–3000 cm³",     "min": 2001, "max": 3000, "norma": 11.4 },
+      { "label": "3001 cm³ felett",   "min": 3001, "norma": 13.3 }
+    ],
+    "gazolaj": [
+      { "label": "1500 cm³-ig",       "max": 1500, "norma": 5.7 },
+      { "label": "1501–2000 cm³",     "min": 1501, "max": 2000, "norma": 6.7 },
+      { "label": "2001–3000 cm³",     "min": 2001, "max": 3000, "norma": 7.6 },
+      { "label": "3001 cm³ felett",   "min": 3001, "norma": 9.5 }
+    ],
+    "lpg": {
+      "modosito": 1.2,
+      "megjegyzes": "A benzin alapnorma 1,2-szeres szorzataként számítandó (LPG esetén)"
+    },
+    "cng_lng": {
+      "modosito": 0.8,
+      "megjegyzes": "A benzin alapnorma 0,8-szoros szorzataként számítandó (CNG/LNG esetén)"
+    }
+  },
+  "motorkerekpar": [
+    { "label": "Segédmotoros kerékpár",       "tipus": "segedmotoros", "max": null, "norma": 3.0 },
+    { "label": "Motorkerékpár 80 cm³-ig",     "tipus": "motor", "max": 80,   "norma": 3.5 },
+    { "label": "Motorkerékpár 81–125 cm³",    "tipus": "motor", "min": 81,   "max": 125,  "norma": 3.8 },
+    { "label": "Motorkerékpár 126–250 cm³",   "tipus": "motor", "min": 126,  "max": 250,  "norma": 4.0 },
+    { "label": "Motorkerékpár 251–500 cm³",   "tipus": "motor", "min": 251,  "max": 500,  "norma": 4.5 },
+    { "label": "Motorkerékpár 500 cm³ felett","tipus": "motor", "min": 501,              "norma": 5.0 }
+  ],
+  "uzemanyag_tipusok": ["benzin", "gazolaj", "lpg", "cng_lng"],
+  "uzemanyag_cimkek": {
+    "benzin": "Benzin",
+    "gazolaj": "Gázolaj",
+    "lpg": "LPG",
+    "cng_lng": "CNG/LNG"
+  },
+  "amortizacio_alapertelmezett": 15
+}
