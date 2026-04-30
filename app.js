@@ -76,6 +76,7 @@ async function init() {
   betoltUzemanyagTipusok();
   betoltLocalStorage();
   bindEvents();
+  frissitModeTabs();
   frissitAdoszamMegjelenes();
   frissitJarmuMod();
   szamol();
@@ -330,13 +331,14 @@ function bindEvents() {
     }
   });
 
-  // Mód radio
-  document.querySelectorAll('input[name="mod"]').forEach(inp => {
-    inp.addEventListener('change', () => {
-      state.mod = inp.value;
-      updateRadioButtons('mod-group', inp.value, 'mod');
-      setVisible('sec-egyszeru',  inp.value === 'egyszeru');
-      setVisible('sec-reszletes', inp.value === 'reszletes');
+  // Mód lapfülek
+  document.querySelectorAll('#mod-tabs .mode-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      state.mod = mode;
+      frissitModeTabs();
+      setVisible('sec-egyszeru', mode === 'egyszeru');
+      setVisible('sec-reszletes', mode === 'reszletes');
       szamol();
     });
   });
@@ -362,7 +364,7 @@ function bindEvents() {
 
   // LocalStorage mentés
   ['ceg-nev', 'ceg-cim', 'adoszam-fo', 'adoszam-masodik',
-   'tulajdonos', 'gyartmany', 'tipus', 'hengerurtartalom', 'amortizacio'].forEach(id => {
+   'tulajdonos', 'gyartmany', 'tipus', 'rendszam', 'hengerurtartalom', 'amortizacio'].forEach(id => {
     const el = $(id);
     if (el) el.addEventListener('input', mentLocalStorage);
   });
@@ -405,6 +407,14 @@ function updateRadioButtons(groupId, selectedValue, radioName) {
   });
 }
 
+function frissitModeTabs() {
+  document.querySelectorAll('#mod-tabs .mode-tab').forEach(btn => {
+    const active = btn.dataset.mode === state.mod;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+}
+
 // ─── Számítás ─────────────────────────────────────────────────────────────────
 
 function szamol() {
@@ -419,7 +429,7 @@ function szamolEgyszeru() {
   const km          = numVal('futasteljesitmeny');
   const osszeg      = numVal('osszeg-vissza');
 
-  const eredmenyDiv = $('egyszeru-eredmeny');
+  const eredmenyDiv = $('kozosen-eredmeny');
 
   if (!fogyasztas || !uzemanyagar) {
     eredmenyDiv.classList.add('hidden');
@@ -434,10 +444,10 @@ function szamolEgyszeru() {
     const amortE = amortizacio * km;
     const ossz   = uzemE + amortE;
 
-    $('er-uzemanyag').textContent    = fmt(Math.round(uzemE));
-    $('er-amortizacio').textContent  = fmt(Math.round(amortE));
-    $('er-osszesen').textContent     = fmt(Math.round(ossz));
-    $('er-km-row').style.display     = 'none';
+    $('kozos-uzemanyag').textContent    = fmt(Math.round(uzemE));
+    $('kozos-amortizacio').textContent  = fmt(Math.round(amortE));
+    $('kozos-osszesen').textContent     = fmt(Math.round(ossz));
+    $('kozos-km-row').style.display     = 'none';
     eredmenyDiv.classList.remove('hidden');
 
   } else if (osszeg !== null && osszeg > 0) {
@@ -446,11 +456,11 @@ function szamolEgyszeru() {
     const uzemE    = fogyasztas / 100 * uzemanyagar * visszaKm;
     const amortE   = amortizacio * visszaKm;
 
-    $('er-uzemanyag').textContent    = fmt(Math.round(uzemE));
-    $('er-amortizacio').textContent  = fmt(Math.round(amortE));
-    $('er-osszesen').textContent     = fmt(Math.round(osszeg));
-    $('er-km').textContent           = fmtKm(Math.round(visszaKm));
-    $('er-km-row').style.display     = '';
+    $('kozos-uzemanyag').textContent    = fmt(Math.round(uzemE));
+    $('kozos-amortizacio').textContent  = fmt(Math.round(amortE));
+    $('kozos-osszesen').textContent     = fmt(Math.round(osszeg));
+    $('kozos-km').textContent           = fmtKm(Math.round(visszaKm));
+    $('kozos-km-row').style.display     = '';
     eredmenyDiv.classList.remove('hidden');
 
   } else {
@@ -472,8 +482,9 @@ function szamolReszletes() {
 
   $('reszletes-ossz-km').textContent = fmtKm(osszkm);
 
-  const eredmenyDiv = $('reszletes-eredmeny');
+  const eredmenyDiv = $('kozosen-eredmeny');
   if (!fogyasztas || !uzemanyagar || osszkm === 0) {
+    $('kozos-km-row').style.display = 'none';
     eredmenyDiv.classList.add('hidden');
     return;
   }
@@ -482,9 +493,10 @@ function szamolReszletes() {
   const amortE = amortizacio * osszkm;
   const ossz   = uzemE + amortE;
 
-  $('rer-uzemanyag').textContent   = fmt(Math.round(uzemE));
-  $('rer-amortizacio').textContent = fmt(Math.round(amortE));
-  $('rer-osszesen').textContent    = fmt(Math.round(ossz));
+  $('kozos-uzemanyag').textContent   = fmt(Math.round(uzemE));
+  $('kozos-amortizacio').textContent = fmt(Math.round(amortE));
+  $('kozos-osszesen').textContent    = fmt(Math.round(ossz));
+  $('kozos-km-row').style.display    = 'none';
   eredmenyDiv.classList.remove('hidden');
 }
 
@@ -575,6 +587,7 @@ function mentLocalStorage() {
       jarmu_tipus:     getRadioValue('jarmu-tipus'),
       gyartmany:       val('gyartmany'),
       tipus:           val('tipus'),
+      rendszam:        val('rendszam'),
       hengerurtartalom: val('hengerurtartalom'),
       uzemanyag:       getRadioValue('uzemanyag'),
       fogyasztas:      val('fogyasztas'),
@@ -610,6 +623,7 @@ function betoltLocalStorage() {
     if (j.tulajdonos)      $('tulajdonos').value       = j.tulajdonos;
     if (j.gyartmany)       $('gyartmany').value        = j.gyartmany;
     if (j.tipus)           $('tipus').value            = j.tipus;
+    if (j.rendszam)        $('rendszam').value         = j.rendszam;
     if (j.hengerurtartalom) $('hengerurtartalom').value = j.hengerurtartalom;
     if (j.fogyasztas)      $('fogyasztas').value       = j.fogyasztas;
     if (j.uzemanyagar)     $('uzemanyagar').value      = j.uzemanyagar;
@@ -644,7 +658,6 @@ function torles() {
 
 function nyomtat() {
   const printView = $('print-view');
-  printView.classList.remove('hidden');
   printView.innerHTML = '<div id="print-content">' + buildPrintHTML() + '</div>';
   window.print();
 }
@@ -665,6 +678,7 @@ function buildPrintHTML() {
   const tulajdonos = val('tulajdonos');
   const gyartmany  = val('gyartmany');
   const tipus      = val('tipus');
+  const rendszam   = val('rendszam');
   const hengerur   = val('hengerurtartalom');
   const jarmuTipus = getRadioValue('jarmu-tipus') === 'motorkerekpar' ? 'Motorkerékpár' : 'Személygépjármű';
 
@@ -744,7 +758,7 @@ function buildPrintHTML() {
     <h1>Útnyilvántartás és Útiköltség-elszámolás</h1>
 
     <h2>Elszámoló adatai</h2>
-    <div class="print-adatok">
+    <div class="print-adatok print-adatok-ceg">
       <div class="print-adat-sor"><span>Név:</span>${escHtml(cegNev)}</div>
       <div class="print-adat-sor"><span>Cím:</span>${escHtml(cegCim)}</div>
       <div class="print-adat-sor"><span>Adószám:</span>${escHtml(adoszam)}${adoszamMasodik ? ' / ' + escHtml(adoszamMasodik) : ''}</div>
@@ -755,6 +769,7 @@ function buildPrintHTML() {
       <div class="print-adat-sor"><span>Tulajdonos:</span>${escHtml(tulajdonos)}</div>
       <div class="print-adat-sor"><span>Jármű:</span>${escHtml(jarmuTipus)}</div>
       <div class="print-adat-sor"><span>Gyártmány / Típus:</span>${escHtml(gyartmany)} ${escHtml(tipus)}</div>
+      <div class="print-adat-sor"><span>Forgalmi rendszám:</span>${escHtml(rendszam)}</div>
       <div class="print-adat-sor"><span>Hengerűrtartalom:</span>${escHtml(hengerur)} cm³</div>
       <div class="print-adat-sor"><span>Üzemanyag:</span>${escHtml(cimkek[uzemanyagNev] || uzemanyagNev)}</div>
       <div class="print-adat-sor"><span>Fogyasztás:</span>${fogyasztas ?? '–'} l/100 km</div>
@@ -769,7 +784,6 @@ function buildPrintHTML() {
 
     <div class="print-alairasok">
       <div class="print-alairasok-mezo">Elszámoló aláírása</div>
-      <div class="print-alairasok-mezo">Jóváhagyó aláírása</div>
     </div>
 
     <div class="print-footer">

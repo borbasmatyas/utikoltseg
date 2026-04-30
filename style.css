@@ -200,6 +200,49 @@ header h1 {
 }
 
 /* ===========================
+   Mód lapfülek
+   =========================== */
+.mode-tabs-wrap {
+  margin-bottom: -1px;
+  padding: 0 16px;
+  position: relative;
+  z-index: 2;
+}
+
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.mode-tab {
+  border: 1px solid transparent;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background: #eef3f9;
+  color: var(--color-secondary);
+  padding: 10px 18px;
+  font-weight: 600;
+}
+
+.mode-tab:hover {
+  background: #e5edf8;
+}
+
+.mode-tab.active {
+  background: #fff;
+  color: var(--color-primary);
+  border-color: var(--color-border);
+  border-bottom-color: #fff;
+  margin-bottom: -1px;
+}
+
+#sec-elszamolas {
+  padding-top: 28px;
+}
+
+/* ===========================
    Adószám
    =========================== */
 .adoszam-wrap {
@@ -453,6 +496,11 @@ button:active { transform: scale(0.98); }
     margin-bottom: 5mm;
   }
 
+  .print-adatok-ceg {
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: start;
+  }
+
   .print-adat-sor {
     font-size: 10pt;
   }
@@ -539,3 +587,44 @@ button:active { transform: scale(0.98); }
 
   button { width: 100%; }
 }
+
+
+/* ===========================
+   Repo footer
+   =========================== */
+
+.repo-footer-links {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+	flex-wrap: wrap;
+}
+
+.repo-footer-link-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-secondary);
+  opacity: 0.5;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  padding: 8px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.repo-footer-link-item:hover {
+  color: var(--color-primary);
+  opacity: 1;
+}
+
+.repo-footer-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  stroke: currentColor;
+  fill: currentColor;
+}
+
