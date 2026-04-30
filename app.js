@@ -623,7 +623,7 @@ function renderUtvonalSor(sor) {
       const idx = state.utvonalak.findIndex(s => s.id == tr.dataset.id);
       if (idx >= 0) state.utvonalak[idx][field] = inp.value;
 
-      if (field === 'datum' || field === 'km_kezdo' || field === 'km_befejezo') {
+      if (field === 'datum') {
         rendezUtvonalakDatumSzerint();
         renderUtvonalSorok();
       } else {
@@ -632,6 +632,16 @@ function renderUtvonalSor(sor) {
       szamolReszletes();
       mentLocalStorage();
     });
+
+    // Km mezőknél csak mezőelhagyáskor rendezünk, hogy gépelés közben ne vesszen el a fókusz
+    if (inp.dataset.field === 'km_kezdo' || inp.dataset.field === 'km_befejezo') {
+      inp.addEventListener('blur', () => {
+        rendezUtvonalakDatumSzerint();
+        renderUtvonalSorok();
+        szamolReszletes();
+        mentLocalStorage();
+      });
+    }
   });
 
   tr.querySelector('.btn-sor-torles').addEventListener('click', () => {
@@ -720,11 +730,8 @@ function betoltLocalStorage() {
       if (inp) { inp.checked = true; updateRadioButtons('jarmu-tipus-group', j.jarmu_tipus, 'jarmu-tipus'); }
     }
     if (j.uzemanyag) {
-      // A dinamikus rádió gombok már betöltve → kis késleltetéssel
-      setTimeout(() => {
-        const inp = document.querySelector(`input[name="uzemanyag"][value="${j.uzemanyag}"]`);
-        if (inp) { inp.checked = true; updateRadioButtons('uzemanyag-group', j.uzemanyag, 'uzemanyag'); }
-      }, 0);
+      const inp = document.querySelector(`input[name="uzemanyag"][value="${j.uzemanyag}"]`);
+      if (inp) { inp.checked = true; updateRadioButtons('uzemanyag-group', j.uzemanyag, 'uzemanyag'); }
     }
     frissitHengerHint();
     frissitJarmuMod();
