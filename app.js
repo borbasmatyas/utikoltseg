@@ -1,5 +1,5 @@
 /**
- * Útnyilvántartás / Útiköltség-elszámolás
+ * Útiköltség-elszámolás
  * Natív HTML/CSS/JS – GitHub Pages kompatibilis
  */
 
@@ -335,11 +335,15 @@ function bindEvents() {
   document.querySelectorAll('#mod-tabs .mode-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;
+      if (mode === state.mod) return;
+      if (tabKiToltve(state.mod)) {
+        const celMod = mode === 'reszletes' ? 'Részletes' : 'Egyszerű';
+        if (!confirm(`Az aktuális fül ki van töltve.\nBiztosan vált „${celMod}" módra?`)) return;
+      }
       state.mod = mode;
       frissitModeTabs();
-      setVisible('sec-egyszeru', mode === 'egyszeru');
-      setVisible('sec-reszletes', mode === 'reszletes');
       szamol();
+      mentLocalStorage();
     });
   });
 
@@ -413,6 +417,18 @@ function frissitModeTabs() {
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-selected', active ? 'true' : 'false');
   });
+  setVisible('sec-egyszeru', state.mod === 'egyszeru');
+  setVisible('sec-reszletes', state.mod === 'reszletes');
+}
+
+function tabKiToltve(mod) {
+  if (mod === 'egyszeru') {
+    return val('futasteljesitmeny') !== '' || val('osszeg-vissza') !== '';
+  }
+  if (mod === 'reszletes') {
+    return state.utvonalak.length > 0;
+  }
+  return false;
 }
 
 // ─── Számítás ─────────────────────────────────────────────────────────────────
@@ -498,6 +514,7 @@ function szamolReszletes() {
   $('kozos-osszesen').textContent    = fmt(Math.round(ossz));
   $('kozos-km-row').style.display    = 'none';
   eredmenyDiv.classList.remove('hidden');
+  validalKmSorrend();
 }
 
 // ─── Részletes mód: útvonal sorok ─────────────────────────────────────────────
@@ -560,6 +577,7 @@ function renderUtvonalSor(sor) {
     tr.remove();
     szamolReszletes();
     mentLocalStorage();
+    validalKmSorrend();
   });
 
   frissitFutas();
@@ -576,6 +594,7 @@ const LS_KEY = 'utikoltseg_v1';
 
 function mentLocalStorage() {
   const data = {
+    mod: state.mod,
     elszamolo: {
       nev:            val('ceg-nev'),
       cim:            val('ceg-cim'),
@@ -608,6 +627,10 @@ function betoltLocalStorage() {
     if (!raw) return;
     data = JSON.parse(raw);
   } catch { return; }
+
+  if (data.mod) {
+    state.mod = data.mod;
+  }
 
   if (data.elszamolo) {
     const e = data.elszamolo;
@@ -652,6 +675,55 @@ function betoltLocalStorage() {
 function torles() {
   try { localStorage.removeItem(LS_KEY); } catch { /* */ }
   location.reload();
+}
+
+// ─── Km-óra állás validáció (soft) ───────────────────────────────────────────
+
+function validalKmSorrend() {
+  const tbody = $('utvonal-tbody');
+  const figyDiv = $('km-figyelmeztes');
+  if (!tbody) return;
+
+  tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('sor-hiba'));
+
+  const hibak = [];
+
+  state.utvonalak.forEach((sor, i) => {
+    const k = parseInt(sor.km_kezdo, 10);
+    const b = parseInt(sor.km_befejezo, 10);
+    const kOk = !isNaN(k) && k > 0;
+    const bOk = !isNaN(b) && b > 0;
+    let hiba = false;
+
+    if (kOk && bOk && b <= k) {
+      hibak.push(`${i + 1}. sor: a befejező km-óra állás (${b}) nem nagyobb a kezdőnél (${k}).`);
+      hiba = true;
+    }
+
+    if (i > 0) {
+      const prev = state.utvonalak[i - 1];
+      const prevB = parseInt(prev.km_befejezo, 10);
+      if (!isNaN(prevB) && prevB > 0 && kOk && k < prevB) {
+        hibak.push(`${i + 1}. sor: a kezdő km-óra állás (${k}) kisebb az előző sor befejező értékénél (${prevB}).`);
+        hiba = true;
+      }
+    }
+
+    if (hiba) {
+      const tr = tbody.querySelector(`tr[data-id="${sor.id}"]`);
+      if (tr) tr.classList.add('sor-hiba');
+    }
+  });
+
+  if (figyDiv) {
+    if (hibak.length > 0) {
+      figyDiv.innerHTML = '⚠ <strong>Km-óra állás figyelmeztetés:</strong><ul>' +
+        hibak.map(h => `<li>${escHtml(h)}</li>`).join('') + '</ul>';
+      figyDiv.classList.remove('hidden');
+    } else {
+      figyDiv.classList.add('hidden');
+    }
+  }
 }
 
 // ─── Nyomtatás ────────────────────────────────────────────────────────────────
@@ -740,7 +812,7 @@ function buildPrintHTML() {
       <table class="print-table">
         <thead>
           <tr>
-            <th>Dátum</th><th>Km kezdő</th><th>Km befejező</th>
+            <th>Dátum</th><th>kezdő <br>km óra állás</th><th>befejező <br>km óra állás</th>
             <th>Útvonala és célja</th><th>Futástelj.</th>
           </tr>
         </thead>
@@ -755,7 +827,7 @@ function buildPrintHTML() {
   }
 
   return `
-    <h1>Útnyilvántartás és Útiköltség-elszámolás</h1>
+    <h1>Útiköltség-elszámolás</h1>
 
     <h2>Elszámoló adatai</h2>
     <div class="print-adatok print-adatok-ceg">
@@ -765,7 +837,7 @@ function buildPrintHTML() {
     </div>
 
     <h2>Gépjármű adatai</h2>
-    <div class="print-adatok">
+    <div class="print-adatok print-adatok-jarmu">
       <div class="print-adat-sor"><span>Tulajdonos:</span>${escHtml(tulajdonos)}</div>
       <div class="print-adat-sor"><span>Jármű:</span>${escHtml(jarmuTipus)}</div>
       <div class="print-adat-sor"><span>Gyártmány / Típus:</span>${escHtml(gyartmany)} ${escHtml(tipus)}</div>
