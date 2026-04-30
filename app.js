@@ -379,8 +379,8 @@ function bindEvents() {
 
   // Sor hozzáadása
   $('btn-sor-hozzaad').addEventListener('click', () => {
-    utvonalSorHozzaad();
-    mentLocalStorage();
+    const siker = utvonalSorHozzaad();
+    if (siker) mentLocalStorage();
   });
 
   // Számítás gomb
@@ -519,7 +519,13 @@ function szamolReszletes() {
 
 // ─── Részletes mód: útvonal sorok ─────────────────────────────────────────────
 
-function utvonalSorHozzaad(adatok) {
+function utvonalSorHozzaad(adatok, force = false) {
+  const utolsoSor = state.utvonalak[state.utvonalak.length - 1];
+  if (!force && utolsoSor && !String(utolsoSor.datum || '').trim()) {
+    alert('Az új sor felvételéhez az előző sor dátuma kötelező.');
+    return false;
+  }
+
   const id = Date.now() + Math.random();
   const legacyUtvonal = [adatok?.kiindulas, adatok?.celallomas].filter(Boolean).join(' -> ');
   const sor = {
@@ -530,8 +536,59 @@ function utvonalSorHozzaad(adatok) {
     utvonal_es_cel: adatok?.utvonal_es_cel || legacyUtvonal || '',
   };
   state.utvonalak.push(sor);
-  renderUtvonalSor(sor);
+  rendezUtvonalakDatumSzerint();
+  renderUtvonalSorok();
   szamolReszletes();
+  return true;
+}
+
+function datumTimestamp(datum) {
+  if (!datum) return null;
+  const ts = Date.parse(datum);
+  return Number.isNaN(ts) ? null : ts;
+}
+
+function rendezUtvonalakDatumSzerint() {
+  const elozoSorrend = state.utvonalak.map(s => s.id);
+
+  state.utvonalak = state.utvonalak
+    .map((sor, idx) => ({ sor, idx }))
+    .sort((a, b) => {
+      const aTs = datumTimestamp(a.sor.datum);
+      const bTs = datumTimestamp(b.sor.datum);
+      const aHas = aTs !== null;
+      const bHas = bTs !== null;
+      const aKezdo = parseInt(a.sor.km_kezdo, 10);
+      const bKezdo = parseInt(b.sor.km_kezdo, 10);
+      const aBef = parseInt(a.sor.km_befejezo, 10);
+      const bBef = parseInt(b.sor.km_befejezo, 10);
+      const aKezdoOk = !Number.isNaN(aKezdo);
+      const bKezdoOk = !Number.isNaN(bKezdo);
+      const aBefOk = !Number.isNaN(aBef);
+      const bBefOk = !Number.isNaN(bBef);
+
+      if (aHas && bHas && aTs !== bTs) return aTs - bTs;
+      if (aHas !== bHas) return aHas ? -1 : 1;
+
+      // Azonos dátumnál km-óra állás szerint rendezünk
+      if (aKezdoOk && bKezdoOk && aKezdo !== bKezdo) return aKezdo - bKezdo;
+      if (aKezdoOk !== bKezdoOk) return aKezdoOk ? -1 : 1;
+      if (aBefOk && bBefOk && aBef !== bBef) return aBef - bBef;
+      if (aBefOk !== bBefOk) return aBefOk ? -1 : 1;
+
+      return a.idx - b.idx;
+    })
+    .map(x => x.sor);
+
+  const ujSorrend = state.utvonalak.map(s => s.id);
+  return elozoSorrend.join('|') !== ujSorrend.join('|');
+}
+
+function renderUtvonalSorok() {
+  const tbody = $('utvonal-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  state.utvonalak.forEach(renderUtvonalSor);
 }
 
 function renderUtvonalSor(sor) {
@@ -540,7 +597,7 @@ function renderUtvonalSor(sor) {
   tr.dataset.id = sor.id;
 
   tr.innerHTML = `
-    <td><input type="date" value="${escHtml(sor.datum)}" data-field="datum" /></td>
+    <td><input type="date" value="${escHtml(sor.datum)}" data-field="datum" required /></td>
     <td><input type="number" min="0" step="1" value="${escHtml(sor.km_kezdo)}" data-field="km_kezdo" placeholder="0" /></td>
     <td><input type="number" min="0" step="1" value="${escHtml(sor.km_befejezo)}" data-field="km_befejezo" placeholder="0" /></td>
     <td><input type="text" value="${escHtml(sor.utvonal_es_cel)}" data-field="utvonal_es_cel" placeholder="Útvonala és célja" /></td>
@@ -565,7 +622,13 @@ function renderUtvonalSor(sor) {
       const field = inp.dataset.field;
       const idx = state.utvonalak.findIndex(s => s.id == tr.dataset.id);
       if (idx >= 0) state.utvonalak[idx][field] = inp.value;
-      frissitFutas();
+
+      if (field === 'datum' || field === 'km_kezdo' || field === 'km_befejezo') {
+        rendezUtvonalakDatumSzerint();
+        renderUtvonalSorok();
+      } else {
+        frissitFutas();
+      }
       szamolReszletes();
       mentLocalStorage();
     });
@@ -668,7 +731,7 @@ function betoltLocalStorage() {
   }
 
   if (data.utvonalak && Array.isArray(data.utvonalak)) {
-    data.utvonalak.forEach(sor => utvonalSorHozzaad(sor));
+    data.utvonalak.forEach(sor => utvonalSorHozzaad(sor, true));
   }
 }
 
@@ -687,25 +750,39 @@ function validalKmSorrend() {
   tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('sor-hiba'));
 
   const hibak = [];
+  let elozoBefejezo = null;
 
   state.utvonalak.forEach((sor, i) => {
     const k = parseInt(sor.km_kezdo, 10);
     const b = parseInt(sor.km_befejezo, 10);
+    const d = String(sor.datum || '').trim();
     const kOk = !isNaN(k) && k > 0;
     const bOk = !isNaN(b) && b > 0;
     let hiba = false;
+
+    if (!d) {
+      hibak.push(`${i + 1}. sor: a dátum megadása kötelező.`);
+      hiba = true;
+    }
 
     if (kOk && bOk && b <= k) {
       hibak.push(`${i + 1}. sor: a befejező km-óra állás (${b}) nem nagyobb a kezdőnél (${k}).`);
       hiba = true;
     }
 
-    if (i > 0) {
-      const prev = state.utvonalak[i - 1];
-      const prevB = parseInt(prev.km_befejezo, 10);
-      if (!isNaN(prevB) && prevB > 0 && kOk && k < prevB) {
-        hibak.push(`${i + 1}. sor: a kezdő km-óra állás (${k}) kisebb az előző sor befejező értékénél (${prevB}).`);
-        hiba = true;
+    if (elozoBefejezo !== null && kOk && k < elozoBefejezo) {
+      hibak.push(`${i + 1}. sor: a kezdő km-óra állás (${k}) átfed az előző szakaszokkal (előző befejező: ${elozoBefejezo}).`);
+      hiba = true;
+    }
+
+    if (elozoBefejezo !== null && bOk && b < elozoBefejezo) {
+      hibak.push(`${i + 1}. sor: a befejező km-óra állás (${b}) nem növekvő az előző befejezőhöz képest (${elozoBefejezo}).`);
+      hiba = true;
+    }
+
+    if (bOk) {
+      if (elozoBefejezo === null || b > elozoBefejezo) {
+        elozoBefejezo = b;
       }
     }
 
