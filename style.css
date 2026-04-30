@@ -623,14 +623,15 @@ button:active { transform: scale(0.98); }
   gap: 16px;
   align-items: center;
 	flex-wrap: wrap;
+  margin-top: 25px;
 }
 
 .repo-footer-link-item {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--color-secondary);
-  opacity: 0.5;
+  color: var(--color-primary);
+  opacity: 0.25;
   text-decoration: none;
   font-size: 0.8rem;
   font-weight: 500;
@@ -641,7 +642,7 @@ button:active { transform: scale(0.98); }
 }
 
 .repo-footer-link-item:hover {
-  color: var(--color-primary);
+  color: black;
   opacity: 1;
 }
 
