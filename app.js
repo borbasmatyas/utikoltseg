@@ -773,7 +773,7 @@ function buildPrintHTML() {
     </div>
 
     <div class="print-footer">
-      Alapnorma: 60/1992. (IV. 1.) Korm. rendelet | Üzemanyagár: NAV – nav.gov.hu/ugyfeliranytu/uzemanyag/
+      
     </div>
   `;
 }
