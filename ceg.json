@@ -1,12 +1,6 @@
 {
-  "nev": "Példa Kft.",
-  "cim": "1234 Budapest, Példa utca 1.",
-  "adoszam": {
-    "torzsszam": "12345678",
-    "afakod": "2",
-    "teruleti_kod": "02",
-    "csoportos": false,
-    "csoportos_adoszam": "",
-    "csoporttag_adoszam": ""
-  }
+	"nev": "",
+	"cim": "",
+	"adoszam": "",
+	"csoporttag_adoszam": ""
 }

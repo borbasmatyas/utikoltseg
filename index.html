@@ -1,245 +1,237 @@
 <!DOCTYPE html>
 <html lang="hu">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Útnyilvántartás / Útiköltség-elszámolás</title>
-  <link rel="stylesheet" href="style.css" />
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Útiköltség-elszámolás</title>
+	<link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
-<div id="app">
+	<div id="app">
 
-  <!-- Fejléc -->
-  <header>
-    <h1>Útnyilvántartás &amp; Útiköltség-elszámolás</h1>
-    <div class="header-links">
-      <a href="https://nav.gov.hu/ugyfeliranytu/uzemanyag/" target="_blank" rel="noopener">
-        🔗 NAV üzemanyagár (aktuális hónap)
-      </a>
-      <a href="https://net.jogtar.hu/jogszabaly?docid=99200060.kor" target="_blank" rel="noopener">
-        📄 60/1992. (IV. 1.) Korm. rendelet
-      </a>
-    </div>
-  </header>
+		<!-- Fejléc -->
+		<header>
+			<h1>Útiköltség-elszámolás</h1>
+			<div class="header-links">
+				<a href="https://nav.gov.hu/ugyfeliranytu/uzemanyag/" target="_blank" rel="noopener">
+					NAV üzemanyagár elszámolás
+				</a>
+				<a href="https://net.jogtar.hu/jogszabaly?docid=99200060.kor" target="_blank" rel="noopener">
+					📄 60/1992. (IV. 1.) Korm. rendelet
+				</a>
+			</div>
+		</header>
 
-  <!-- ===== ELSZÁMOLÓ BLOKK ===== -->
-  <section class="card" id="sec-elszamolo">
-    <h2>Elszámoló adatai</h2>
-    <div class="form-row">
-      <label for="ceg-nev">Név</label>
-      <input type="text" id="ceg-nev" placeholder="Elszámoló neve" autocomplete="organization" />
-    </div>
-    <div class="form-row">
-      <label for="ceg-cim">Cím (székhely)</label>
-      <input type="text" id="ceg-cim" placeholder="Cím" autocomplete="street-address" />
-    </div>
+		<!-- ===== ELSZÁMOLÓ BLOKK ===== -->
+		<section class="card" id="sec-elszamolo">
+			<h2>Elszámoló adatai</h2>
+			<div class="form-row">
+				<label for="ceg-nev">Név</label>
+				<input type="text" id="ceg-nev" placeholder="Elszámoló neve" autocomplete="organization" />
+			</div>
+			<div class="form-row">
+				<label for="ceg-cim">Cím</label>
+				<input type="text" id="ceg-cim" placeholder="Cím" autocomplete="street-address" />
+			</div>
 
-    <!-- Adószám blokk -->
-    <div class="form-row adoszam-row">
-      <label>Adószám</label>
-      <div class="adoszam-wrap">
-        <div class="adoszam-fields">
-          <input type="text" id="adoszam-torzsszam" maxlength="8" pattern="[0-9]{8}" placeholder="12345678" title="8 jegyű törzsszám" class="adoszam-part" />
-          <span class="adoszam-sep">–</span>
-          <input type="text" id="adoszam-afakod" maxlength="1" pattern="[12459]" placeholder="2" title="ÁFA kód (1,2,4,5)" class="adoszam-part adoszam-afa" />
-          <span class="adoszam-sep">–</span>
-          <input type="text" id="adoszam-teruleti" maxlength="2" pattern="[0-9]{2}" placeholder="02" title="Területi kód (2 jegy)" class="adoszam-part adoszam-ter" />
-        </div>
-        <div id="adoszam-csoportos-wrap" class="hidden">
-          <div class="form-row">
-            <label for="adoszam-csoport" id="adoszam-csoport-label">Csoportos adószám</label>
-            <input type="text" id="adoszam-csoport" maxlength="13" placeholder="12345678-4-02" />
-          </div>
-          <div class="form-row">
-            <label for="adoszam-csoporttag">Csoporttag azonosító</label>
-            <input type="text" id="adoszam-csoporttag" maxlength="13" placeholder="12345678-4-02" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+			<!-- Adószám blokk -->
+			<div class="form-row adoszam-row">
+				<label id="adoszam-fo-label" for="adoszam-fo">Adószám</label>
+				<div class="adoszam-wrap">
+					<input type="text" id="adoszam-fo" maxlength="13" placeholder="12345678-2-22" class="adoszam-input"
+						autocomplete="off" spellcheck="false" title="Adószám formátuma: 12345678-2-22" />
+					<div id="adoszam-masodik-wrap" class="hidden adoszam-masodik-row">
+						<label for="adoszam-masodik" id="adoszam-masodik-label">Csoporttag azonosítója</label>
+						<input type="text" id="adoszam-masodik" maxlength="13" placeholder="12345678-4-02"
+							class="adoszam-input" autocomplete="off" spellcheck="false" />
+					</div>
+				</div>
+			</div>
+		</section>
 
-  <!-- ===== JÁRMŰ BLOKK ===== -->
-  <section class="card" id="sec-jarmu">
-    <h2>Gépjármű adatai</h2>
-    <div class="form-row">
-      <label for="tulajdonos">Tulajdonos neve</label>
-      <input type="text" id="tulajdonos" placeholder="Tulajdonos neve" />
-    </div>
+		<!-- ===== JÁRMŰ BLOKK ===== -->
+		<section class="card" id="sec-jarmu">
+			<h2>Gépjármű adatai</h2>
+			<div class="form-row">
+				<label for="tulajdonos">Tulajdonos neve</label>
+				<input type="text" id="tulajdonos" placeholder="Tulajdonos neve" />
+			</div>
 
-    <div class="form-row">
-      <label>Jármű típusa</label>
-      <div class="radio-group" id="jarmu-tipus-group">
-        <label class="radio-btn active">
-          <input type="radio" name="jarmu-tipus" value="szemelygepkocsi" checked />
-          Személygépjármű
-        </label>
-        <label class="radio-btn">
-          <input type="radio" name="jarmu-tipus" value="motorkerekpar" />
-          Motorkerékpár / segédmotor
-        </label>
-      </div>
-    </div>
+			<div class="form-row">
+				<label>Jármű típusa</label>
+				<div class="radio-group" id="jarmu-tipus-group">
+					<label class="radio-btn active">
+						<input type="radio" name="jarmu-tipus" value="szemelygepkocsi" checked />
+						Személygépjármű
+					</label>
+					<label class="radio-btn">
+						<input type="radio" name="jarmu-tipus" value="motorkerekpar" />
+						Motorkerékpár
+					</label>
+				</div>
+			</div>
 
-    <div class="form-row">
-      <label for="gyartmany">Gyártmány</label>
-      <input type="text" id="gyartmany" placeholder="pl. Toyota" />
-    </div>
-    <div class="form-row">
-      <label for="tipus">Típus</label>
-      <input type="text" id="tipus" placeholder="pl. Corolla" />
-    </div>
+			<div class="form-row">
+				<label for="gyartmany">Gyártmány</label>
+				<input type="text" id="gyartmany" placeholder="pl. Toyota" />
+			</div>
+			<div class="form-row">
+				<label for="tipus">Típus</label>
+				<input type="text" id="tipus" placeholder="pl. Corolla" />
+			</div>
 
-    <div class="form-row">
-      <label for="hengerurtartalom">Motor hengerűrtartalma (cm³)</label>
-      <div class="input-with-hint">
-        <input type="number" id="hengerurtartalom" min="1" max="9999" step="1" placeholder="pl. 1598" />
-        <span id="hengerurtartalom-hint" class="input-hint"></span>
-      </div>
-    </div>
+			<div class="form-row">
+				<label for="hengerurtartalom">Motor hengerűrtartalma (cm³)</label>
+				<div class="input-with-hint">
+					<input type="number" id="hengerurtartalom" min="1" max="9999" step="1" placeholder="pl. 1598" />
+					<span id="hengerurtartalom-hint" class="input-hint"></span>
+				</div>
+			</div>
 
-    <!-- Üzemanyag (csak személygépkocsinál releváns, motoroknál elrejtve) -->
-    <div class="form-row" id="uzemanyag-row">
-      <label>Üzemanyag</label>
-      <div class="radio-group" id="uzemanyag-group">
-        <!-- JS tölti fel norma.json alapján -->
-      </div>
-    </div>
-  </section>
+			<!-- Üzemanyag (csak személygépkocsinál releváns, motoroknál elrejtve) -->
+			<div class="form-row" id="uzemanyag-row">
+				<label>Üzemanyag</label>
+				<div class="radio-group" id="uzemanyag-group">
+					<!-- JS tölti fel norma.json alapján -->
+				</div>
+			</div>
+		</section>
 
-  <!-- ===== ÜZEMANYAG / NORMA BLOKK ===== -->
-  <section class="card" id="sec-norma">
-    <h2>Üzemanyag &amp; Norma</h2>
-    <div class="form-row">
-      <label for="fogyasztas">
-        Fogyasztás (l/100 km)
-        <span class="label-hint" id="norma-forras-hint"></span>
-      </label>
-      <input type="number" id="fogyasztas" min="0" step="0.1" placeholder="pl. 6.7" />
-    </div>
-    <div class="form-row">
-      <label for="uzemanyagar">Üzemanyagár (Ft/liter)</label>
-      <input type="number" id="uzemanyagar" min="0" step="1" placeholder="pl. 590" />
-    </div>
-    <div class="form-row">
-      <label for="amortizacio">Amortizáció (Ft/km)</label>
-      <input type="number" id="amortizacio" min="0" step="1" value="15" />
-    </div>
-  </section>
+		<!-- ===== ÜZEMANYAG / NORMA BLOKK ===== -->
+		<section class="card" id="sec-norma">
+			<h2>Üzemanyag &amp; Norma</h2>
+			<div class="form-row">
+				<label for="fogyasztas">
+					Fogyasztás (l/100 km)
+					<span class="label-hint" id="norma-forras-hint"></span>
+				</label>
+				<input type="number" id="fogyasztas" min="0" step="0.1" placeholder="pl. 6.7" />
+			</div>
+			<div class="form-row">
+				<label for="uzemanyagar">Üzemanyagár (Ft/liter)</label>
+				<input type="number" id="uzemanyagar" min="0" step="1" placeholder="pl. 590" />
+			</div>
+			<div class="form-row">
+				<label for="amortizacio">Amortizáció (Ft/km)</label>
+				<input type="number" id="amortizacio" min="0" step="1" value="15" />
+			</div>
+		</section>
 
-  <!-- ===== MÓD VÁLASZTÓ ===== -->
-  <section class="card" id="sec-mod">
-    <h2>Elszámolás módja</h2>
-    <div class="radio-group" id="mod-group">
-      <label class="radio-btn active">
-        <input type="radio" name="mod" value="egyszeru" checked />
-        Egyszerű
-      </label>
-      <label class="radio-btn">
-        <input type="radio" name="mod" value="reszletes" />
-        Részletes
-      </label>
-    </div>
-  </section>
+		<!-- ===== MÓD VÁLASZTÓ ===== -->
+		<section class="card" id="sec-mod">
+			<h2>Elszámolás módja</h2>
+			<div class="radio-group" id="mod-group">
+				<label class="radio-btn active">
+					<input type="radio" name="mod" value="egyszeru" checked />
+					Egyszerű
+				</label>
+				<label class="radio-btn">
+					<input type="radio" name="mod" value="reszletes" />
+					Részletes
+				</label>
+			</div>
+		</section>
 
-  <!-- ===== EGYSZERŰ MÓD ===== -->
-  <section class="card" id="sec-egyszeru">
-    <h2>Egyszerű elszámolás</h2>
-    <div class="form-row">
-      <label for="futasteljesitmeny">Futásteljesítmény (km)</label>
-      <input type="number" id="futasteljesitmeny" min="0" step="1" placeholder="pl. 444" />
-    </div>
-    <div class="form-row">
-      <label for="osszeg-vissza">
-        – vagy – Összeg (Ft)
-        <span class="label-hint">km visszaszámítás</span>
-      </label>
-      <input type="number" id="osszeg-vissza" min="0" step="1" placeholder="pl. 27000" />
-    </div>
+		<!-- ===== EGYSZERŰ MÓD ===== -->
+		<section class="card" id="sec-egyszeru">
+			<h2>Egyszerű elszámolás</h2>
+			<div class="form-row">
+				<label for="futasteljesitmeny">Futásteljesítmény (km)</label>
+				<input type="number" id="futasteljesitmeny" min="0" step="1" placeholder="pl. 444" />
+			</div>
+			<div class="form-row">
+				<label for="osszeg-vissza">
+					– vagy – Összeg (Ft)
+					<span class="label-hint">km visszaszámítás</span>
+				</label>
+				<input type="number" id="osszeg-vissza" min="0" step="1" placeholder="pl. 27000" />
+			</div>
 
-    <div id="egyszeru-eredmeny" class="eredmeny hidden">
-      <div class="eredmeny-sor">
-        <span>Üzemanyag:</span>
-        <strong id="er-uzemanyag">–</strong>
-      </div>
-      <div class="eredmeny-sor">
-        <span>Amortizáció:</span>
-        <strong id="er-amortizacio">–</strong>
-      </div>
-      <div class="eredmeny-sor total">
-        <span>Összesen:</span>
-        <strong id="er-osszesen">–</strong>
-      </div>
-      <div class="eredmeny-sor" id="er-km-row" style="display:none">
-        <span>Visszaszámított km:</span>
-        <strong id="er-km">–</strong>
-      </div>
-    </div>
-  </section>
+			<div id="egyszeru-eredmeny" class="eredmeny hidden">
+				<div class="eredmeny-sor">
+					<span>Üzemanyag:</span>
+					<strong id="er-uzemanyag">–</strong>
+				</div>
+				<div class="eredmeny-sor">
+					<span>Amortizáció:</span>
+					<strong id="er-amortizacio">–</strong>
+				</div>
+				<div class="eredmeny-sor total">
+					<span>Összesen:</span>
+					<strong id="er-osszesen">–</strong>
+				</div>
+				<div class="eredmeny-sor" id="er-km-row" style="display:none">
+					<span>Visszaszámított km:</span>
+					<strong id="er-km">–</strong>
+				</div>
+			</div>
+		</section>
 
-  <!-- ===== RÉSZLETES MÓD ===== -->
-  <section class="card hidden" id="sec-reszletes">
-    <h2>Részletes útvonalak</h2>
-    <div class="utvonal-tabla-wrap">
-      <table id="utvonal-tabla">
-        <thead>
-          <tr>
-            <th>Dátum</th>
-            <th>Km-óra (kezdő)</th>
-            <th>Kiindulás</th>
-            <th>Km-óra (befejező)</th>
-            <th>Célállomás</th>
-            <th>Futástelj. (km)</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="utvonal-tbody">
-          <!-- sorok JS-ből -->
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="5" class="osszesites-label">Összesített futásteljesítmény:</td>
-            <td id="reszletes-ossz-km" class="osszesites-ertek">0 km</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-    <button type="button" id="btn-sor-hozzaad" class="btn-secondary">+ Sor hozzáadása</button>
+		<!-- ===== RÉSZLETES MÓD ===== -->
+		<section class="card hidden" id="sec-reszletes">
+			<h2>Részletes útvonalak</h2>
+			<div class="utvonal-tabla-wrap">
+				<table id="utvonal-tabla">
+					<thead>
+						<tr>
+							<th>Dátum</th>
+							<th>Km-óra (kezdő)</th>
+							<th>Km-óra (befejező)</th>
+							<th>Útvonala és célja</th>
+							<th>Futásteljesítmény (km)</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody id="utvonal-tbody">
+						<!-- sorok JS-ből -->
+					</tbody>
+					<tfoot>
+						<tr>
+							<td colspan="4" class="osszesites-label">Összesített futásteljesítmény:</td>
+							<td id="reszletes-ossz-km" class="osszesites-ertek">0 km</td>
+							<td></td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+			<button type="button" id="btn-sor-hozzaad" class="btn-secondary">+ Sor hozzáadása</button>
 
-    <div id="reszletes-eredmeny" class="eredmeny hidden">
-      <div class="eredmeny-sor">
-        <span>Üzemanyag:</span>
-        <strong id="rer-uzemanyag">–</strong>
-      </div>
-      <div class="eredmeny-sor">
-        <span>Amortizáció:</span>
-        <strong id="rer-amortizacio">–</strong>
-      </div>
-      <div class="eredmeny-sor total">
-        <span>Összesen:</span>
-        <strong id="rer-osszesen">–</strong>
-      </div>
-    </div>
-  </section>
+			<div id="reszletes-eredmeny" class="eredmeny hidden">
+				<div class="eredmeny-sor">
+					<span>Üzemanyag:</span>
+					<strong id="rer-uzemanyag">–</strong>
+				</div>
+				<div class="eredmeny-sor">
+					<span>Amortizáció:</span>
+					<strong id="rer-amortizacio">–</strong>
+				</div>
+				<div class="eredmeny-sor total">
+					<span>Összesen:</span>
+					<strong id="rer-osszesen">–</strong>
+				</div>
+			</div>
+		</section>
 
-  <!-- ===== MŰVELETI GOMBOK ===== -->
-  <div class="action-bar">
-    <button type="button" id="btn-szamol" class="btn-primary">Számítás</button>
-    <button type="button" id="btn-nyomtat" class="btn-secondary">🖨 Nyomtatás</button>
-    <button type="button" id="btn-torles" class="btn-danger">Adatok törlése</button>
-  </div>
+		<!-- ===== MŰVELETI GOMBOK ===== -->
+		<div class="action-bar">
+			<button type="button" id="btn-szamol" class="btn-primary">Számítás</button>
+			<button type="button" id="btn-nyomtat" class="btn-secondary">Nyomtatás</button>
+			<button type="button" id="btn-torles" class="btn-danger">Adatok törlése</button>
+		</div>
 
-</div><!-- #app -->
+	</div><!-- #app -->
 
-<!-- ===== NYOMTATÁSI NÉZET ===== -->
-<div id="print-view" class="hidden">
-  <div id="print-content">
-    <!-- JS tölti fel -->
-  </div>
-</div>
+	<!-- ===== NYOMTATÁSI NÉZET ===== -->
+	<div id="print-view" class="hidden">
+		<div id="print-content">
+			<!-- JS tölti fel -->
+		</div>
+	</div>
 
-<script src="app.js"></script>
+	<script src="app.js"></script>
 </body>
+
 </html>

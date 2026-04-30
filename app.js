@@ -86,32 +86,88 @@ async function init() {
 function betoltCegAdatok() {
   if (!state.ceg) return;
   const c = state.ceg;
-  if (c.nev)  $('ceg-nev').value  = c.nev;
-  if (c.cim)  $('ceg-cim').value  = c.cim;
+  if (c.nev) $('ceg-nev').value = c.nev;
+  if (c.cim) $('ceg-cim').value = c.cim;
   if (c.adoszam) {
-    const a = c.adoszam;
-    if (a.torzsszam)    $('adoszam-torzsszam').value = a.torzsszam;
-    if (a.afakod)       $('adoszam-afakod').value    = a.afakod;
-    if (a.teruleti_kod) $('adoszam-teruleti').value  = a.teruleti_kod;
-    if (a.csoportos) {
-      if (a.csoportos_adoszam)  $('adoszam-csoport').value    = a.csoportos_adoszam;
-      if (a.csoporttag_adoszam) $('adoszam-csoporttag').value = a.csoporttag_adoszam;
-    }
-    frissitAdoszamMegjelenes();
+    $('adoszam-fo').value = formatAdoszam(c.adoszam);
+  }
+  if (c.csoporttag_adoszam) {
+    $('adoszam-masodik').value = formatAdoszam(c.csoporttag_adoszam);
+  }
+  frissitAdoszamMegjelenes();
+}
+
+// ─── Adószám formázás / maszkolás ─────────────────────────────────────────────
+
+function formatAdoszam(raw) {
+  const digits = String(raw ?? '').replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 8)  return digits;
+  if (digits.length === 9) return digits.slice(0, 8) + '-' + digits.slice(8);
+  return digits.slice(0, 8) + '-' + digits.slice(8, 9) + '-' + digits.slice(9);
+}
+
+function setCursorAfterDigits(inp, n) {
+  const v = inp.value;
+  if (n <= 0) { inp.setSelectionRange(0, 0); return; }
+  let count = 0;
+  for (let i = 0; i < v.length; i++) {
+    if (/\d/.test(v[i])) count++;
+    if (count === n) { inp.setSelectionRange(i + 1, i + 1); return; }
+  }
+  inp.setSelectionRange(v.length, v.length);
+}
+
+function adoszamHandleInput(inp) {
+  const before    = inp.value;
+  const cursorPos = inp.selectionStart;
+  const digitsBefore = before.slice(0, cursorPos).replace(/\D/g, '').length;
+  const formatted = formatAdoszam(before);
+  inp.value = formatted;
+  setCursorAfterDigits(inp, digitsBefore);
+  frissitAdoszamMegjelenes();
+  mentLocalStorage();
+}
+
+function adoszamHandleKeydown(e, inp) {
+  if (e.key !== 'Backspace') return;
+  if (inp.selectionStart !== inp.selectionEnd) return;
+  const pos = inp.selectionStart;
+  if (pos > 0 && inp.value[pos - 1] === '-') {
+    // Move cursor before the dash so the next backspace deletes the digit
+    e.preventDefault();
+    inp.setSelectionRange(pos - 1, pos - 1);
   }
 }
 
 // ─── Adószám dinamikus megjelenés ─────────────────────────────────────────────
 
 function frissitAdoszamMegjelenes() {
-  const afakod = val('adoszam-afakod');
-  const csoportos = (afakod === '4' || afakod === '5');
-  setVisible('adoszam-csoportos-wrap', csoportos);
+  const foFormatted     = val('adoszam-fo');
+  const masodikFormatted = val('adoszam-masodik');
+  const masodikWrap     = $('adoszam-masodik-wrap');
+  const isMasodikVisible = !masodikWrap.classList.contains('hidden');
+
+  // ÁFA kód: a fő mezőből, vagy ha az üres, a második mezőből
+  const afaFromFo     = foFormatted.length >= 10  ? foFormatted[9]      : '';
+  const afaFromMasodik = masodikFormatted.length >= 10 ? masodikFormatted[9] : '';
+  const afakod = afaFromFo || (isMasodikVisible ? afaFromMasodik : '');
+
+  const csoportos = afakod === '4' || afakod === '5';
+
   if (csoportos) {
-    const lbl = $('adoszam-csoport-label');
-    if (lbl) lbl.textContent = afakod === '5'
-      ? 'Csoportazonosító adószám'
-      : 'Csoportos adószám';
+    $('adoszam-fo-label').textContent = 'Csoportos adószám';
+    $('adoszam-masodik-label').textContent = 'Csoporttag azonosítója';
+    if (isMasodikVisible) return; // már látszik, nincs teendő
+    // Első megjelenés
+    if (afaFromFo === '4') {
+      // ÁFA=4 → ez a csoporttag adószáma → átkerül a második mezőbe
+      $('adoszam-masodik').value = foFormatted;
+      $('adoszam-fo').value = '';
+    }
+    masodikWrap.classList.remove('hidden');
+  } else {
+    $('adoszam-fo-label').textContent = 'Adószám';
+    masodikWrap.classList.add('hidden');
   }
 }
 
@@ -251,8 +307,12 @@ function frissitHengerHint() {
 // ─── Eseménykezelők ───────────────────────────────────────────────────────────
 
 function bindEvents() {
-  // Adószám ÁFA kód → csoportos megjelenés
-  $('adoszam-afakod').addEventListener('input', frissitAdoszamMegjelenes);
+  // Adószám maszkolás és csoportos logika
+  [$('adoszam-fo'), $('adoszam-masodik')].forEach(inp => {
+    if (!inp) return;
+    inp.addEventListener('input',   () => adoszamHandleInput(inp));
+    inp.addEventListener('keydown', e  => adoszamHandleKeydown(e, inp));
+  });
 
   // Jármű típus radio
   document.querySelectorAll('input[name="jarmu-tipus"]').forEach(inp => {
@@ -301,8 +361,7 @@ function bindEvents() {
   });
 
   // LocalStorage mentés
-  ['ceg-nev', 'ceg-cim', 'adoszam-torzsszam', 'adoszam-afakod', 'adoszam-teruleti',
-   'adoszam-csoport', 'adoszam-csoporttag',
+  ['ceg-nev', 'ceg-cim', 'adoszam-fo', 'adoszam-masodik',
    'tulajdonos', 'gyartmany', 'tipus', 'hengerurtartalom', 'amortizacio'].forEach(id => {
     const el = $(id);
     if (el) el.addEventListener('input', mentLocalStorage);
@@ -433,13 +492,13 @@ function szamolReszletes() {
 
 function utvonalSorHozzaad(adatok) {
   const id = Date.now() + Math.random();
+  const legacyUtvonal = [adatok?.kiindulas, adatok?.celallomas].filter(Boolean).join(' -> ');
   const sor = {
     id,
     datum:        adatok?.datum        || '',
     km_kezdo:     adatok?.km_kezdo     || '',
-    kiindulas:    adatok?.kiindulas    || '',
     km_befejezo:  adatok?.km_befejezo  || '',
-    celallomas:   adatok?.celallomas   || '',
+    utvonal_es_cel: adatok?.utvonal_es_cel || legacyUtvonal || '',
   };
   state.utvonalak.push(sor);
   renderUtvonalSor(sor);
@@ -454,9 +513,8 @@ function renderUtvonalSor(sor) {
   tr.innerHTML = `
     <td><input type="date" value="${escHtml(sor.datum)}" data-field="datum" /></td>
     <td><input type="number" min="0" step="1" value="${escHtml(sor.km_kezdo)}" data-field="km_kezdo" placeholder="0" /></td>
-    <td><input type="text" value="${escHtml(sor.kiindulas)}" data-field="kiindulas" placeholder="Kiindulás" /></td>
     <td><input type="number" min="0" step="1" value="${escHtml(sor.km_befejezo)}" data-field="km_befejezo" placeholder="0" /></td>
-    <td><input type="text" value="${escHtml(sor.celallomas)}" data-field="celallomas" placeholder="Célállomás" /></td>
+    <td><input type="text" value="${escHtml(sor.utvonal_es_cel)}" data-field="utvonal_es_cel" placeholder="Útvonala és célja" /></td>
     <td class="sor-futastelj">0 km</td>
     <td><button type="button" class="btn-sor-torles" title="Sor törlése">✕</button></td>
   `;
@@ -507,13 +565,10 @@ const LS_KEY = 'utikoltseg_v1';
 function mentLocalStorage() {
   const data = {
     elszamolo: {
-      nev:             val('ceg-nev'),
-      cim:             val('ceg-cim'),
-      torzsszam:       val('adoszam-torzsszam'),
-      afakod:          val('adoszam-afakod'),
-      teruleti:        val('adoszam-teruleti'),
-      csoport:         val('adoszam-csoport'),
-      csoporttag:      val('adoszam-csoporttag'),
+      nev:            val('ceg-nev'),
+      cim:            val('ceg-cim'),
+      adoszam_fo:     val('adoszam-fo'),
+      adoszam_masodik: val('adoszam-masodik'),
     },
     jarmu: {
       tulajdonos:      val('tulajdonos'),
@@ -543,13 +598,11 @@ function betoltLocalStorage() {
 
   if (data.elszamolo) {
     const e = data.elszamolo;
-    if (e.nev)        $('ceg-nev').value              = e.nev;
-    if (e.cim)        $('ceg-cim').value              = e.cim;
-    if (e.torzsszam)  $('adoszam-torzsszam').value    = e.torzsszam;
-    if (e.afakod)     $('adoszam-afakod').value       = e.afakod;
-    if (e.teruleti)   $('adoszam-teruleti').value     = e.teruleti;
-    if (e.csoport)    $('adoszam-csoport').value      = e.csoport;
-    if (e.csoporttag) $('adoszam-csoporttag').value   = e.csoporttag;
+    if (e.nev)             $('ceg-nev').value         = e.nev;
+    if (e.cim)             $('ceg-cim').value         = e.cim;
+    if (e.adoszam_fo)      $('adoszam-fo').value      = e.adoszam_fo;
+    if (e.adoszam_masodik) $('adoszam-masodik').value = e.adoszam_masodik;
+    frissitAdoszamMegjelenes();
   }
 
   if (data.jarmu) {
@@ -604,13 +657,10 @@ function buildPrintHTML() {
   const cimkek = state.norma?.uzemanyag_cimkek || {};
 
   // Adatok összegyűjtése
-  const cegNev    = val('ceg-nev');
-  const cegCim    = val('ceg-cim');
-  const torzsszam = val('adoszam-torzsszam');
-  const afakod    = val('adoszam-afakod');
-  const teruleti  = val('adoszam-teruleti');
-  const adoszam   = torzsszam && afakod && teruleti
-    ? `${torzsszam}-${afakod}-${teruleti}` : '–';
+  const cegNev  = val('ceg-nev');
+  const cegCim  = val('ceg-cim');
+  const adoszam = val('adoszam-fo') || '–';
+  const adoszamMasodik = val('adoszam-masodik');
 
   const tulajdonos = val('tulajdonos');
   const gyartmany  = val('gyartmany');
@@ -662,9 +712,8 @@ function buildPrintHTML() {
       sorHtml += `<tr>
         <td>${escHtml(sor.datum)}</td>
         <td>${escHtml(sor.km_kezdo)}</td>
-        <td>${escHtml(sor.kiindulas)}</td>
         <td>${escHtml(sor.km_befejezo)}</td>
-        <td>${escHtml(sor.celallomas)}</td>
+        <td>${escHtml(sor.utvonal_es_cel || '')}</td>
         <td>${futas > 0 ? fmtKm(futas) : '–'}</td>
       </tr>`;
     });
@@ -677,8 +726,8 @@ function buildPrintHTML() {
       <table class="print-table">
         <thead>
           <tr>
-            <th>Dátum</th><th>Km kezdő</th><th>Kiindulás</th>
-            <th>Km befejező</th><th>Célállomás</th><th>Futástelj.</th>
+            <th>Dátum</th><th>Km kezdő</th><th>Km befejező</th>
+            <th>Útvonala és célja</th><th>Futástelj.</th>
           </tr>
         </thead>
         <tbody>${sorHtml}</tbody>
@@ -698,7 +747,7 @@ function buildPrintHTML() {
     <div class="print-adatok">
       <div class="print-adat-sor"><span>Név:</span>${escHtml(cegNev)}</div>
       <div class="print-adat-sor"><span>Cím:</span>${escHtml(cegCim)}</div>
-      <div class="print-adat-sor"><span>Adószám:</span>${escHtml(adoszam)}</div>
+      <div class="print-adat-sor"><span>Adószám:</span>${escHtml(adoszam)}${adoszamMasodik ? ' / ' + escHtml(adoszamMasodik) : ''}</div>
     </div>
 
     <h2>Gépjármű adatai</h2>
